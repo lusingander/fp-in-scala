@@ -1,0 +1,5 @@
+package fpinscala
+
+object Main extends App {
+  println("Hello, World!")
+}
