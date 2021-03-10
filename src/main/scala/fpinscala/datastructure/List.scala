@@ -1,5 +1,7 @@
 package fpinscala.datastructure
 
+import scala.annotation.tailrec
+
 sealed trait List[+A]
 
 case object Nil extends List[Nothing]
@@ -22,9 +24,9 @@ object List {
     if (n <= 0) l else drop(tail(l), n - 1)
 
   // 3.5
-  def dropWhile[A](l: List[A], p: A => Boolean): List[A] =
+  def dropWhile[A](l: List[A])(p: A => Boolean): List[A] =
     l match {
-      case Cons(x, xs) if p(x) => dropWhile(xs, p)
+      case Cons(x, xs) if p(x) => dropWhile(xs)(p)
       case _                   => l
     }
 
@@ -41,6 +43,36 @@ object List {
       case Cons(_, Nil) => Nil
       case Cons(x, xs)  => Cons(x, init(xs))
     }
+
+  def foldRight[A, B](as: List[A], z: B)(f: (A, B) => B): B =
+    as match {
+      case Nil         => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
+
+  def sum2(ints: List[Int]): Int = foldRight(ints, 0)((x, y) => x + y)
+
+  def product2(ds: List[Double]): Double = foldRight(ds, 1.0)((x, y) => x * y)
+
+  // 3.9
+  def length[A](as: List[A]): Int = foldRight(as, 0)((_, n) => n + 1)
+
+  // 3.10
+  @tailrec
+  def foldLeft[A, B](as: List[A], z: B)(f: (B, A) => B): B =
+    as match {
+      case Nil         => z
+      case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+    }
+
+  // 3.11
+  def sum3(ints: List[Int]): Int = foldLeft(ints, 0)(_ + _)
+  def product3(ds: List[Double]): Double = foldLeft(ds, 1.0)(_ * _)
+  def length2[A](as: List[A]): Int = foldLeft(as, 0)((n, _) => n + 1)
+
+  // 3.12
+  def reverse[A](as: List[A]): List[A] =
+    foldLeft(as, Nil: List[A])((xs, x) => Cons(x, xs))
 
   def sum(ints: List[Int]): Int = ints match {
     case Nil         => 0
