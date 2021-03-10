@@ -74,6 +74,94 @@ object List {
   def reverse[A](as: List[A]): List[A] =
     foldLeft(as, Nil: List[A])((xs, x) => Cons(x, xs))
 
+  // 3.13
+  def foldLeftByfoldRight[A, B](as: List[A], z: B)(f: (B, A) => B): B =
+    ???
+  def foldRightByfoldLeft[A, B](as: List[A], z: B)(f: (A, B) => B): B =
+    ???
+
+  // 3.14
+  def append2[A](a1: List[A], a2: List[A]): List[A] =
+    foldRight(a1, a2)((x, y) => Cons(x, y))
+
+  // 3.15
+  def concatLists[A](ll: List[List[A]]): List[A] =
+    foldLeft(ll, Nil: List[A])(append)
+
+  // 3.16
+  def add1(ints: List[Int]): List[Int] =
+    foldRight(ints, Nil: List[Int])((n, ns) => Cons(n + 1, ns))
+
+  // 3.17
+  def doubleToString(ds: List[Double]): List[String] =
+    foldRight(ds, Nil: List[String])((d, ss) => Cons(d.toString, ss))
+
+  // 3.18
+  def map[A, B](l: List[A])(f: A => B): List[B] =
+    foldRight(l, Nil: List[B])((x, xs) => Cons(f(x), xs))
+
+  // 3.19
+  def filter[A](l: List[A])(f: A => Boolean): List[A] =
+    foldRight(l, Nil: List[A])((x, xs) => if (f(x)) Cons(x, xs) else xs)
+
+  // 3.20
+  def flatMap[A, B](l: List[A])(f: A => List[B]): List[B] =
+    foldRight(l, Nil: List[B])((x, xs) => append(f(x), xs))
+  def flatMap2[A, B](l: List[A])(f: A => List[B]): List[B] =
+    concatLists(map(l)(f))
+
+  // 3.21
+  def filterByFlatMap[A](l: List[A])(f: A => Boolean): List[A] =
+    flatMap(l)(a => if (f(a)) List(a) else Nil)
+
+  // 3.22
+  def addInts(l1: List[Int], l2: List[Int]): List[Int] =
+    (l1, l2) match {
+      case (Nil, _)                   => Nil
+      case (_, Nil)                   => Nil
+      case (Cons(n, ns), Cons(m, ms)) => Cons(n + m, addInts(ns, ms))
+    }
+
+  // 3.23
+  def zipWith[A, B, C](l1: List[A], l2: List[B])(f: (A, B) => C): List[C] =
+    (l1, l2) match {
+      case (Nil, _)                   => Nil
+      case (_, Nil)                   => Nil
+      case (Cons(n, ns), Cons(m, ms)) => Cons(f(n, m), zipWith(ns, ms)(f))
+    }
+
+  // 3.24
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = {
+    // ABCD
+    // a
+    // ab
+    //  b
+    // abc
+    //  bc
+    //   c
+    // abcd
+    //  bcd
+    //   cd
+    //    d
+    def enumrate[A](l: List[A]): List[List[A]] =
+      l match {
+        case Nil         => Nil
+        case Cons(x, xs) => Cons(l, enumrate(xs))
+      }
+    def subsequences[A](l: List[A]): List[List[A]] =
+      l match {
+        case Nil => Nil
+        case _   => append(enumrate(l), subsequences(init(l)))
+      }
+    exist(subsequences(sup))(_ == sub)
+  }
+
+  def exist[A](l: List[A])(f: A => Boolean): Boolean =
+    l match {
+      case Nil         => false
+      case Cons(x, xs) => if (f(x)) true else exist(xs)(f)
+    }
+
   def sum(ints: List[Int]): Int = ints match {
     case Nil         => 0
     case Cons(x, xs) => x + sum(xs)
