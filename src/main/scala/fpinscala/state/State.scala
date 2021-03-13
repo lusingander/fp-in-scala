@@ -16,16 +16,6 @@ case class State[S, +A](run: S => (A, S)) {
 
   def map2[B, C](t: State[S, B])(f: (A, B) => C): State[S, C] =
     flatMap(a => t.map(b => f(a, b)))
-
-  def get[S]: State[S, S] = State(s => (s, s))
-
-  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
-
-  def modity[S](f: S => S): State[S, Unit] =
-    for {
-      s <- get
-      _ <- set(f(s))
-    } yield ()
 }
 
 object State {
@@ -34,6 +24,16 @@ object State {
 
   def sequence[S, A](ss: List[State[S, A]]): State[S, List[A]] =
     ss.foldRight(State.unit[S, List[A]](List()))((s, l) => s.map2(l)(_ :: _))
+
+  def get[S]: State[S, S] = State(s => (s, s))
+
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+
+  def modify[S](f: S => S): State[S, Unit] =
+    for {
+      s <- get
+      _ <- set(f(s))
+    } yield ()
 }
 
 // 6.11
@@ -46,8 +46,27 @@ case class Machine(locked: Boolean, candies: Int, coins: Int)
 
 object Machine {
 
-  def process(input: Input) = ???
+  // Input => Machine => Machine
+  def process(input: Input): Machine => Machine =
+    machine => {
+      (input, machine) match {
+        case (Coin, Machine(true, x, y)) if x > 0 =>
+          Machine(false, x, y + 1)
+        case (Turn, Machine(false, x, y)) =>
+          Machine(true, x - 1, y)
+        case (Coin, Machine(false, x, y)) =>
+          machine
+        case (Turn, Machine(true, x, y)) =>
+          machine
+      }
+    }
 
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] =
-    ???
+  // List[Input] => Machine => ((Int, Int), Machine)
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
+    val processes = inputs.map(process(_)) // List[Machine => Machine]
+    for {
+      _ <- State.sequence(processes.map(State.modify(_)))
+      p <- State.get
+    } yield (p.coins, p.candies)
+  }
 }

@@ -6,4 +6,3 @@ https://github.com/fpinscala/fpinscala
 
 - 3.13
 - 5.16
-- 6.11
