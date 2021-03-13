@@ -65,6 +65,55 @@ object Par {
     map(x)(_.flatten)
   }
 
+  def equal[A](e: ExecutorService)(p1: Par[A], p2: Par[A]): Boolean =
+    p1(e).get == p2(e).get
+
+  def delay[A](fa: => Par[A]): Par[A] =
+    s => fa(s)
+
+  def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    s => if (run(s)(cond).get) t(s) else f(s)
+
+  // 7.11
+  def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    s => choices(run(s)(n).get)(s)
+
+  def choice2[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    choiceN(map(cond)(if (_) 0 else 1))(List(t, f))
+
+  // 7.12
+  def choiceMap[K, V](key: Par[K])(choices: Map[K, Par[V]]): Par[V] =
+    s => choices(run(s)(key).get)(s)
+
+  // 7.13
+  def chooser[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
+    s => {
+      val a = run(s)(pa).get
+      run(s)(choices(a))
+    }
+
+  def choiceN2[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+    chooser(n)(choices(_))
+
+  def choice3[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    chooser(cond)(if (_) t else f)
+
+  def flatMap[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
+    chooser(pa)(choices)
+
+  // 7.14
+  def join[A](a: Par[Par[A]]): Par[A] =
+    s => {
+      val p = run(s)(a).get
+      run(s)(p)
+    }
+
+  def flatMap2[A, B](pa: Par[A])(choices: A => Par[B]): Par[B] =
+    join(map(pa)(choices))
+
+  def join2[A](a: Par[Par[A]]): Par[A] =
+    flatMap(a)(identity)
+
   def sum(ints: IndexedSeq[Int]): Int = {
     if (ints.size <= 1)
       ints.headOption getOrElse 0
