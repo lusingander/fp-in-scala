@@ -2,7 +2,8 @@
 
 https://github.com/fpinscala/fpinscala
 
-## TODO
+## :(
 
 - 3.13
 - 5.16
+- 7.3
