@@ -51,10 +51,10 @@ object RNG {
   def nonNegativeEven: Rand[Int] =
     map(nonNegativeInt)(i => i - (i % 2))
 
-  def nonNefativeLessThan(n: Int): Rand[Int] = { rng =>
+  def nonNegativeLessThan(n: Int): Rand[Int] = { rng =>
     val (i, next) = nonNegativeInt(rng)
     val mod = i % n
-    if (i + (n - 1) - mod >= 0) (mod, next) else nonNefativeLessThan(n)(rng)
+    if (i + (n - 1) - mod >= 0) (mod, next) else nonNegativeLessThan(n)(rng)
   }
 
   // 6.8
@@ -64,10 +64,10 @@ object RNG {
       g(a)(next)
     }
 
-  def nonNefativeLessThan2(n: Int): Rand[Int] =
+  def nonNegativeLessThan2(n: Int): Rand[Int] =
     flatMap(nonNegativeInt) { i =>
       val mod = i % n
-      if (i + (n - 1) - mod >= 0) unit(mod) else nonNefativeLessThan(n)
+      if (i + (n - 1) - mod >= 0) unit(mod) else nonNegativeLessThan(n)
     }
 
   // 6.9
