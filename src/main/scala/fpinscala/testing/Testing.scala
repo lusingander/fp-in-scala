@@ -262,6 +262,11 @@ object Gen {
   object ** {
     def unapply[A, B](p: (A, B)) = Some(p)
   }
+
+  def stringN(n: Int): Gen[String] =
+    listOfN(n, choose(0, 127)).map(_.map(_.toChar).mkString)
+
+  val string: SGen[String] = SGen(stringN)
 }
 
 case class SGen[+A](forSize: Int => Gen[A]) {
@@ -274,6 +279,9 @@ case class SGen[+A](forSize: Int => Gen[A]) {
 
   def map[B](f: A => B): SGen[B] =
     SGen(n => forSize(n).map(f))
+
+  def **[B](s2: SGen[B]): SGen[(A, B)] =
+    SGen(n => apply(n) ** s2(n))
 }
 
 object SGen {

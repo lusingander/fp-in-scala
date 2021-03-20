@@ -1,10 +1,11 @@
 package fpinscala.parsing
 
 import fpinscala.testing.Gen
+import fpinscala.testing.SGen
 import fpinscala.testing.Prop
 import scala.util.matching.Regex
 
-trait Parsers[ParseError, Parser[+_]] { self =>
+trait Parsers[Parser[+_]] { self =>
 
   def or[A](a1: Parser[A], a2: => Parser[A]): Parser[A]
 
@@ -18,11 +19,7 @@ trait Parsers[ParseError, Parser[+_]] { self =>
   def succeed[A](a: A): Parser[A] =
     string("").map(_ => a)
 
-  // def map[A, B](p: Parser[A])(f: A => B): Parser[B]
-
   def slice[A](p: Parser[A]): Parser[String]
-
-  // def product[A, B](p1: Parser[A], p2: => Parser[B]): Parser[(A, B)]
 
   def flatMap[A, B](p: Parser[A])(f: A => Parser[B]): Parser[B]
 
@@ -68,6 +65,23 @@ trait Parsers[ParseError, Parser[+_]] { self =>
 
   def run[A](p: Parser[A])(input: String): Either[ParseError, A]
 
+  def label[A](msg: String)(p: Parser[A]): Parser[A]
+  def scope[A](msg: String)(p: Parser[A]): Parser[A]
+
+  def attempy[A](p: Parser[A]): Parser[A]
+
+  case class ParseError(stack: List[(Location, String)])
+
+  case class Location(input: String, offset: Int = 0) {
+    lazy val line = input.slice(0, offset + 1).count(_ == '\n') + 1
+    lazy val col = input.slice(0, offset + 1).lastIndexOf('\n') match {
+      case -1        => offset + 1
+      case lineStart => offset - lineStart
+    }
+  }
+  def errorLocation(e: ParseError): Location
+  def errorMessage(e: ParseError): String
+
   case class ParserOps[A](p: Parser[A]) {
     def |[B >: A](p2: Parser[B]): Parser[B] = self.or(p, p2)
     def or[B >: A](p2: => Parser[B]): Parser[B] = self.or(p, p2)
@@ -85,5 +99,12 @@ trait Parsers[ParseError, Parser[+_]] { self =>
       Prop.forAll(in)(s => run(p1)(s) == run(p2)(s))
     def mapLaw[A](p: Parser[A])(in: Gen[String]): Prop =
       equal(p, p.map(identity))(in)
+    def labelLaw[A](p: Parser[A], input: SGen[String]): Prop =
+      Prop.forAll(input ** Gen.string) { case (input, msg) =>
+        run(label(msg)(p))(input) match {
+          case Left(e) => errorMessage(e) == msg
+          case _       => true
+        }
+      }
   }
 }
