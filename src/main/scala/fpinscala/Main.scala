@@ -1,15 +1,14 @@
 package fpinscala
 
-import fpinscala.datastructure._
-import fpinscala.datastructure.List._
+import fpinscala.testing.Gen
+import fpinscala.testing.Prop
+import fpinscala.testing.SGen
 
 object Main extends App {
-  val x = List(1, 2, 3, 4, 5) match {
-    case Cons(x, Cons(2, Cons(4, _)))          => x
-    case Nil                                   => 42
-    case Cons(x, Cons(y, Cons(3, Cons(4, _)))) => x + y
-    case Cons(h, t)                            => h + sum(t)
-    case _                                     => 101
+  val smallInt = Gen.choose(-10, 10)
+  val maxProp = Prop.forAll(SGen.listOf1(smallInt)) { ns =>
+    val max = ns.max
+    !ns.exists(_ > max)
   }
-  println(x)
+  Prop.run(maxProp)
 }
