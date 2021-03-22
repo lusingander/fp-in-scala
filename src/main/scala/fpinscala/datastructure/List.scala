@@ -76,9 +76,10 @@ object List {
 
   // 3.13
   def foldLeftByfoldRight[A, B](as: List[A], z: B)(f: (B, A) => B): B =
-    ???
+    foldRight(reverse(as), z)((a, b) => f(b, a))
+
   def foldRightByfoldLeft[A, B](as: List[A], z: B)(f: (A, B) => B): B =
-    ???
+    foldLeft(reverse(as), z)((b, a) => f(a, b))
 
   // 3.14
   def append2[A](a1: List[A], a2: List[A]): List[A] =
