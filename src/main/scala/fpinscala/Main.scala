@@ -7,9 +7,9 @@ import fpinscala.monoid.Monoid
 
 object Main extends App {
   val ints = Gen.choose(-100, 100)
-  val intAdditionProp = Monoid.monoidLaws(Monoid.IntAddition, ints)
+  val intAdditionProp = Monoid.monoidLaws(Monoid.intAddition, ints)
   Prop.run(intAdditionProp)
-  val intMultiplicationProp = Monoid.monoidLaws(Monoid.IntMultiplication, ints)
+  val intMultiplicationProp = Monoid.monoidLaws(Monoid.intMultiplication, ints)
   Prop.run(intMultiplicationProp)
 
   val booleanOrProp = Monoid.monoidLaws(Monoid.booleanOr, Gen.boolean)
