@@ -91,8 +91,8 @@ sealed trait Stream[+A] {
       .append(Stream(Stream.empty)) // :(
 
   // 5.16
-  def scanRight[B](z: B)(f: (A, B) => B): Stream[B] =
-    ???
+  def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] =
+    foldRight(Stream(z))((a, sb) => Stream.cons(f(a, sb.headOption.get), sb))
 }
 
 case object Empty extends Stream[Nothing]
