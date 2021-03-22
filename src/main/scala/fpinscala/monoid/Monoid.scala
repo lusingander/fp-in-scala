@@ -57,7 +57,10 @@ object Monoid {
 
   // 10.4
   def monoidLaws[A](m: Monoid[A], gen: Gen[A]): Prop = {
-    val gen3 = gen.listOfN(3).map { case x :: y :: z :: _ => (x, y, z) }
+    val tupled: PartialFunction[List[A], (A, A, A)] = { case x :: y :: z :: _ =>
+      (x, y, z)
+    }
+    val gen3 = gen.listOfN(3).map(tupled)
     Prop.forAll(gen)(a => m.op(a, m.zero) == a && m.op(m.zero, a) == a) &&
     Prop.forAll(gen3) { case (x, y, z) =>
       m.op(x, m.op(y, z)) == m.op(m.op(x, y), z)
