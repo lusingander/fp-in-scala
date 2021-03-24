@@ -3,7 +3,7 @@ package fpinscala.applicative
 import fpinscala.monad.Functor
 import fpinscala.monad.Monad
 
-trait Applicative[F[_]] extends Functor[F] {
+trait Applicative[F[_]] extends Functor[F] { self =>
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C]
   def unit[A](a: => A): F[A]
 
@@ -37,6 +37,24 @@ trait Applicative[F[_]] extends Functor[F] {
       f: (A, B, C, D) => E
   ): F[E] =
     apply(apply(apply(apply(unit(f.curried))(fa))(fb))(fc))(fd)
+
+  // 12.8
+  def product[G[_]](G: Applicative[G]) =
+    new Applicative[({ type f[x] = (F[x], G[x]) })#f] {
+      def unit[A](a: => A) =
+        (self.unit(a), G.unit(a))
+      def map2[A, B, C](fa: (F[A], G[A]), fb: (F[B], G[B]))(f: (A, B) => C) =
+        (self.map2(fa._1, fb._1)(f), G.map2(fa._2, fb._2)(f))
+    }
+
+  // 12.9
+  def compose[G[_]](G: Applicative[G]) =
+    new Applicative[({ type f[x] = F[G[x]] })#f] {
+      def unit[A](a: => A) =
+        self.unit(G.unit(a))
+      def map2[A, B, C](fa: F[G[A]], fb: F[G[B]])(f: (A, B) => C) =
+        self.map2(fa, fb)(G.map2(_, _)(f))
+    }
 }
 
 object Applicative {
