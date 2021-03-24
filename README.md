@@ -9,3 +9,5 @@ https://github.com/fpinscala/fpinscala
 - 8.15
 - 9.9
 - 10.9
+- 12.14
+- 12.16
